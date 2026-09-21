@@ -1,0 +1,30 @@
+{
+  "name": "voice",
+  "version": "0.1.0",
+  "type": "core",
+  "interface": "universal",
+  "category": "communication",
+  "description": "Chorus core \u2014 real-time voice rooms over logos-delivery",
+  "main": "voice_plugin",
+  "dependencies": [
+    "delivery_module"
+  ],
+  "nix": {
+    "packages": {
+      "build": [
+        "pkg-config"
+      ],
+      "runtime": [
+        "portaudio",
+        "libopus"
+      ]
+    },
+    "external_libraries": [],
+    "cmake": {
+      "find_packages": [],
+      "extra_sources": [],
+      "extra_include_dirs": [],
+      "extra_link_libraries": []
+    }
+  }
+}

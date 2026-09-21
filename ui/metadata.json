@@ -1,0 +1,25 @@
+{
+  "name": "voice_ui",
+  "displayName": "Chorus",
+  "version": "0.1.0",
+  "type": "ui_qml",
+  "category": "communication",
+  "description": "Chorus — voice rooms with no server in between",
+  "view": "Main.qml",
+  "icon": "icons/voice.png",
+  "dependencies": ["voice"],
+
+  "nix": {
+    "packages": {
+      "build": [],
+      "runtime": []
+    },
+    "external_libraries": [],
+    "cmake": {
+      "find_packages": [],
+      "extra_sources": [],
+      "extra_include_dirs": [],
+      "extra_link_libraries": []
+    }
+  }
+}
