@@ -1,11 +1,11 @@
 {
-  "name": "voice",
+  "name": "chorus_core",
   "version": "0.1.0",
   "type": "core",
   "interface": "universal",
   "category": "communication",
   "description": "Chorus core \u2014 real-time voice rooms over logos-delivery",
-  "main": "voice_plugin",
+  "main": "chorus_core_plugin",
   "dependencies": [
     "delivery_module"
   ],

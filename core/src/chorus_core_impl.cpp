@@ -1,4 +1,4 @@
-#include "voice_impl.h"
+#include "chorus_core_impl.h"
 
 #include "logos_sdk.h"          // generated: modules().delivery_module
 
@@ -62,7 +62,7 @@ uint32_t getU32(const uint8_t* p)
 
 // ── lifecycle ────────────────────────────────────────────────────────────
 
-VoiceImpl::VoiceImpl()
+ChorusCoreImpl::ChorusCoreImpl()
     : m_audio(new voice::AudioEngine)
 {
     std::random_device rd;
@@ -71,27 +71,27 @@ VoiceImpl::VoiceImpl()
     m_myId = toHex(m_myIdRaw);
 }
 
-VoiceImpl::~VoiceImpl()
+ChorusCoreImpl::~ChorusCoreImpl()
 {
     m_pumping = false;
     if (m_pump.joinable()) m_pump.join();
     if (m_audio) m_audio->stop();
 }
 
-void VoiceImpl::onContextReady()
+void ChorusCoreImpl::onContextReady()
 {
     // Nothing to load from disk yet. The node is brought up on demand, so
     // opening the module does not put you on the network.
     //
-    // VOICE_AUTOJOIN is a testing hook: two Basecamps on one machine share a
+    // CHORUS_AUTOJOIN is a testing hook: two Basecamps on one machine share a
     // process name, and the macOS accessibility layer cannot reliably tell
     // them apart, so driving both UIs from a script does not work. With this
     // set, the second instance joins on its own and only the first needs a
     // human (or a click) at all.
-    const char* room = std::getenv("VOICE_AUTOJOIN");
+    const char* room = std::getenv("CHORUS_AUTOJOIN");
     if (!room || !*room) return;
     const std::string roomId = room;
-    const char* nm = std::getenv("VOICE_NAME");
+    const char* nm = std::getenv("CHORUS_NAME");
     const std::string name = nm ? nm : "";
 
     // Off the init path and after a beat: the dependency is not necessarily
@@ -102,7 +102,7 @@ void VoiceImpl::onContextReady()
     }).detach();
 }
 
-std::string VoiceImpl::myId()
+std::string ChorusCoreImpl::myId()
 {
     std::lock_guard<std::mutex> lk(m_mu);
     return m_myId;
@@ -110,7 +110,7 @@ std::string VoiceImpl::myId()
 
 // ── network ──────────────────────────────────────────────────────────────
 
-void VoiceImpl::wireDeliveryEvents()
+void ChorusCoreImpl::wireDeliveryEvents()
 {
     if (m_eventsWired) return;
     m_eventsWired = true;
@@ -136,7 +136,7 @@ void VoiceImpl::wireDeliveryEvents()
         });
 }
 
-StdLogosResult VoiceImpl::startNetwork()
+StdLogosResult ChorusCoreImpl::startNetwork()
 {
     {
         std::lock_guard<std::mutex> lk(m_mu);
@@ -154,7 +154,7 @@ StdLogosResult VoiceImpl::startNetwork()
         // The B identity below is what this delivery_module actually derives
         // from KEY_B, read off a live run. The value part6 still carries is
         // stale, which silently cost it one of its two dial directions.
-        const char* portEnv = std::getenv("VOICE_TCPPORT");
+        const char* portEnv = std::getenv("CHORUS_TCPPORT");
         const int customPort = portEnv ? std::atoi(portEnv) : 0;
         const bool isB    = customPort > 0;
         const int tcpPort = isB ? customPort : 60000;
@@ -215,7 +215,7 @@ StdLogosResult VoiceImpl::startNetwork()
     return {true, "started"};
 }
 
-StdLogosResult VoiceImpl::stopNetwork()
+StdLogosResult ChorusCoreImpl::stopNetwork()
 {
     leaveRoom();
     {
@@ -234,7 +234,7 @@ StdLogosResult VoiceImpl::stopNetwork()
 
 // ── rooms ────────────────────────────────────────────────────────────────
 
-std::string VoiceImpl::topicFor(const std::string& roomId)
+std::string ChorusCoreImpl::topicFor(const std::string& roomId)
 {
     // A topic segment, not a free string. Without this, "Team Standup" and
     // "team-standup" would be different rooms that look like the same one.
@@ -250,7 +250,7 @@ std::string VoiceImpl::topicFor(const std::string& roomId)
     return "/logos-voice/1/" + clean + "/json";
 }
 
-StdLogosResult VoiceImpl::joinRoom(const std::string& roomId, const std::string& displayName)
+StdLogosResult ChorusCoreImpl::joinRoom(const std::string& roomId, const std::string& displayName)
 {
     if (roomId.empty()) return {false, {}, "room id is empty"};
 
@@ -291,14 +291,14 @@ StdLogosResult VoiceImpl::joinRoom(const std::string& roomId, const std::string&
         m_audioError.clear();
     }
 
-    if (!m_pumping.exchange(true)) m_pump = std::thread(&VoiceImpl::pumpLoop, this);
+    if (!m_pumping.exchange(true)) m_pump = std::thread(&ChorusCoreImpl::pumpLoop, this);
 
     announce(kPktHello);
     roomChanged(roomState());
     return {true, topic};
 }
 
-StdLogosResult VoiceImpl::leaveRoom()
+StdLogosResult ChorusCoreImpl::leaveRoom()
 {
     std::string topic;
     {
@@ -328,7 +328,7 @@ StdLogosResult VoiceImpl::leaveRoom()
     return {true, "left"};
 }
 
-StdLogosResult VoiceImpl::setMuted(bool muted)
+StdLogosResult ChorusCoreImpl::setMuted(bool muted)
 {
     m_audio->setMuted(muted);
     roomChanged(roomState());
@@ -337,7 +337,7 @@ StdLogosResult VoiceImpl::setMuted(bool muted)
 
 // ── the wire ─────────────────────────────────────────────────────────────
 
-void VoiceImpl::send(const std::vector<uint8_t>& packet)
+void ChorusCoreImpl::send(const std::vector<uint8_t>& packet)
 {
     std::string topic;
     {
@@ -348,7 +348,7 @@ void VoiceImpl::send(const std::vector<uint8_t>& packet)
     modules().delivery_module.send(topic, packet);
 }
 
-void VoiceImpl::announce(uint8_t kind)
+void ChorusCoreImpl::announce(uint8_t kind)
 {
     std::vector<uint8_t> pkt;
     std::string name;
@@ -363,7 +363,7 @@ void VoiceImpl::announce(uint8_t kind)
     send(pkt);
 }
 
-void VoiceImpl::pumpLoop()
+void ChorusCoreImpl::pumpLoop()
 {
     int64_t lastBeat = 0;
     while (m_pumping) {
@@ -412,7 +412,7 @@ void VoiceImpl::pumpLoop()
     }
 }
 
-void VoiceImpl::onPacket(const std::string& topic, const std::vector<uint8_t>& payload)
+void ChorusCoreImpl::onPacket(const std::string& topic, const std::vector<uint8_t>& payload)
 {
     if (static_cast<int>(payload.size()) < kHeaderBytes) return;
     {
@@ -465,7 +465,7 @@ void VoiceImpl::onPacket(const std::string& topic, const std::vector<uint8_t>& p
 
 // ── state for the UI ─────────────────────────────────────────────────────
 
-std::string VoiceImpl::roomState()
+std::string ChorusCoreImpl::roomState()
 {
     json st;
     std::vector<std::pair<std::string, std::string>> peers;

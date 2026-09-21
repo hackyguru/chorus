@@ -31,11 +31,11 @@
  * `delivery_module::send` takes a `std::vector<uint8_t>`, so a packet is a
  * 21-byte header plus the Opus payload, about 140 bytes for 40 ms of speech.
  */
-class VoiceImpl : public LogosModuleContext
+class ChorusCoreImpl : public LogosModuleContext
 {
 public:
-    VoiceImpl();
-    ~VoiceImpl();
+    ChorusCoreImpl();
+    ~ChorusCoreImpl();
 
     /// Bring the delivery node up. Idempotent.
     StdLogosResult startNetwork();

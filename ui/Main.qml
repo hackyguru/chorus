@@ -43,7 +43,7 @@ Rectangle {
     // Remembered across sessions: your display name and recent rooms.
     Settings {
         id: prefs
-        category: "voice_ui"
+        category: "chorus"
         property string displayName: ""
         property string recentJson: "[]"
         property bool pushToTalk: false
@@ -76,7 +76,7 @@ Rectangle {
     function callVoice(method) {
         if (typeof logos === "undefined" || !logos.callModule)
             return null;
-        return logos.callModule("voice", method, []);
+        return logos.callModule("chorus_core", method, []);
     }
     function callVoiceArgs(method, args, cb) {
         if (typeof logos === "undefined" || !logos.callModuleAsync) {
@@ -85,7 +85,7 @@ Rectangle {
                 cb(null);
             return;
         }
-        logos.callModuleAsync("voice", method, args, function (raw) {
+        logos.callModuleAsync("chorus_core", method, args, function (raw) {
             refresh();
             if (cb)
                 cb(unwrap(raw, null));
@@ -879,7 +879,7 @@ Rectangle {
             Layout.fillWidth: true
             spacing: Theme.spacing.medium
             Image {
-                source: "icons/voice.png"
+                source: "icons/chorus.png"
                 Layout.preferredWidth: 32
                 Layout.preferredHeight: 32
                 sourceSize: Qt.size(128, 128)

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(VoicePlugin LANGUAGES CXX)
+project(ChorusCorePlugin LANGUAGES CXX)
 
 if(DEFINED ENV{LOGOS_MODULE_BUILDER_ROOT})
     include($ENV{LOGOS_MODULE_BUILDER_ROOT}/cmake/LogosModule.cmake)
@@ -21,10 +21,10 @@ pkg_check_modules(portaudio REQUIRED IMPORTED_TARGET portaudio-2.0)
 pkg_check_modules(opus      REQUIRED IMPORTED_TARGET opus)
 
 logos_module(
-    NAME voice
+    NAME chorus_core
     SOURCES
-        src/voice_impl.h
-        src/voice_impl.cpp
+        src/chorus_core_impl.h
+        src/chorus_core_impl.cpp
         src/voice_audio.h
         src/voice_audio.cpp
     LINK_LIBRARIES

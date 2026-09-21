@@ -104,16 +104,16 @@ Step 3's re-signing matters: Apple Silicon checks every executable page when it 
 | --- | --- |
 | `nix build '.#lgx-portable'` in `core/` | Build the core module package |
 | `nix build '.#lgx-portable'` in `ui/` | Build the UI against the core pinned on GitHub |
-| `nix build --override-input voice path:../core '.#lgx-portable'` in `ui/` | Build the UI against your local `core/` |
-| `nix flake update voice` in `ui/` | Move the UI's pin to the latest pushed core |
+| `nix build --override-input chorus_core path:../core '.#lgx-portable'` in `ui/` | Build the UI against your local `core/` |
+| `nix flake update chorus_core` in `ui/` | Move the UI's pin to the latest pushed core |
 | `./install.sh` | Install both packages into Basecamp |
 | `core/tests/run.sh` | Build and run the Opus and packet-size harness |
 
-**Two peers on one machine.** Two Basecamps would fight over the same P2P ports, so the core reads `VOICE_TCPPORT` and gives each instance a deterministic node key and the other's address as a static peer. They dial each other over loopback instead of depending on the public fleet.
+**Two peers on one machine.** Two Basecamps would fight over the same P2P ports, so the core reads `CHORUS_TCPPORT` and gives each instance a deterministic node key and the other's address as a static peer. They dial each other over loopback instead of depending on the public fleet.
 
 ```sh
 open -n /Applications/LogosBasecamp.app
-VOICE_TCPPORT=60001 open -n /Applications/LogosBasecamp.app
+CHORUS_TCPPORT=60001 open -n /Applications/LogosBasecamp.app
 ```
 
 Wear headphones. Two open microphones on one machine feed back through the speakers otherwise.
@@ -122,9 +122,9 @@ Wear headphones. Two open microphones on one machine feed back through the speak
 
 | Variable | What it does |
 | --- | --- |
-| `VOICE_TCPPORT` | Run as the second instance on this port (and UDP `9000 + port − 60000`) |
-| `VOICE_AUTOJOIN` | Join this room on its own a few seconds after loading. Two Basecamps share a process name, so scripting both UIs does not work; this lets only one of them need a human |
-| `VOICE_NAME` | The display name to use with `VOICE_AUTOJOIN` |
+| `CHORUS_TCPPORT` | Run as the second instance on this port (and UDP `9000 + port − 60000`) |
+| `CHORUS_AUTOJOIN` | Join this room on its own a few seconds after loading. Two Basecamps share a process name, so scripting both UIs does not work; this lets only one of them need a human |
+| `CHORUS_NAME` | The display name to use with `CHORUS_AUTOJOIN` |
 
 **The network.** The logos.dev fleet moved to cluster 3, and the `logos.dev` preset inside `delivery_module` 0.2.0 still says cluster 2, so every fleet peer would drop the node with `different clusterId reported: 2 vs 3`. The core sets `clusterId` explicitly, which wins over the preset. Drop that line once the module ships the new preset.
 
@@ -132,14 +132,14 @@ Wear headphones. Two open microphones on one machine feed back through the speak
 
 | Path | What it is |
 | --- | --- |
-| [`core/`](core/) | The `voice` core module, C++ |
-| [`core/src/voice_impl.cpp`](core/src/voice_impl.cpp) | Rooms, presence and the wire format |
+| [`core/`](core/) | The `chorus_core` module, C++ |
+| [`core/src/chorus_core_impl.cpp`](core/src/chorus_core_impl.cpp) | Rooms, presence and the wire format |
 | [`core/src/voice_audio.cpp`](core/src/voice_audio.cpp) | PortAudio capture and playback, Opus, jitter buffers, mixing |
 | [`core/tests/`](core/tests/) | The offline Opus and packet-size harness |
-| [`ui/`](ui/) | The `voice_ui` frontend, a single `Main.qml` on Logos.Theme and Logos.Controls |
+| [`ui/`](ui/) | The `chorus` frontend, a single `Main.qml` on Logos.Theme and Logos.Controls |
 | [`install.sh`](install.sh) | Local installer for Basecamp on macOS |
 
-The module ids stay `voice` and `voice_ui`. Chorus is the product name; renaming the ids would break anything that depends on them.
+Two modules: `chorus_core` does the audio and the networking, `chorus` is the interface you open in Basecamp.
 
 ## Status
 

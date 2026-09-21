@@ -9,8 +9,8 @@ set -euo pipefail
 
 BASE="$HOME/Library/Application Support/Logos/LogosBasecamp"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CORE_LGX="$HERE/core/result-portable/logos-voice-module-lib.lgx"
-UI_LGX="$HERE/ui/result-portable/logos-voice_ui-module.lgx"
+CORE_LGX="$HERE/core/result-portable/logos-chorus_core-module-lib.lgx"
+UI_LGX="$HERE/ui/result-portable/logos-chorus-module.lgx"
 VARIANT="darwin-arm64"
 
 for f in "$CORE_LGX" "$UI_LGX"; do
@@ -31,8 +31,8 @@ mkdir -p "$TMP/core" "$TMP/ui"
 tar -xzf "$CORE_LGX" -C "$TMP/core"
 tar -xzf "$UI_LGX"   -C "$TMP/ui"
 
-echo "==> Installing core -> modules/voice"
-DEST="$BASE/modules/voice"
+echo "==> Installing core -> modules/chorus_core"
+DEST="$BASE/modules/chorus_core"
 mkdir -p "$DEST"
 for f in "$TMP/core/variants/$VARIANT"/*; do
     name="$(basename "$f")"
@@ -51,8 +51,8 @@ done
 cp "$TMP/core/manifest.json" "$DEST/manifest.json"
 printf '%s' "$VARIANT" > "$DEST/variant"
 
-echo "==> Installing UI -> plugins/voice_ui"
-DEST="$BASE/plugins/voice_ui"
+echo "==> Installing UI -> plugins/chorus"
+DEST="$BASE/plugins/chorus"
 mkdir -p "$DEST"
 cp -R "$TMP/ui/variants/$VARIANT/." "$DEST/"
 # The manifest points `icon` at assets/icon.png, which lives at the package
@@ -66,4 +66,4 @@ ls "$DEST" | sed 's/^/    /'
 
 echo "==> Done. Launch two peers with:"
 echo "    open -n /Applications/LogosBasecamp.app"
-echo "    VOICE_TCPPORT=60001 open -n /Applications/LogosBasecamp.app"
+echo "    CHORUS_TCPPORT=60001 open -n /Applications/LogosBasecamp.app"

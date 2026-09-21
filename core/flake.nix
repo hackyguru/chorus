@@ -1,5 +1,5 @@
 {
-  description = "Chorus core (voice) — real-time conference calling over logos-delivery (PortAudio + Opus)";
+  description = "Chorus core (chorus_core) — real-time conference calling over logos-delivery (PortAudio + Opus)";
 
   inputs = {
     logos-module-builder.url = "github:logos-co/logos-module-builder";
