@@ -1,0 +1,77 @@
+name: Release packages
+
+# Builds a portable .lgx for each module (chorus_core, chorus) on each
+# platform and attaches them to the GitHub release:
+#
+#   chorus_core-<version>-<platform>.lgx
+#   chorus-<version>-<platform>.lgx
+#
+# Runs when a release is published, or by hand for an existing tag. The UI
+# is built against core/ from the same commit, not the GitHub pin in
+# ui/flake.lock, so the two packages always match.
+#
+# These are unsigned. The signed, all-platform packages Basecamp installs
+# are published by the catalog at https://modules.hackyguru.com.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to build and attach packages to (e.g. v0.1.2)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: darwin-arm64
+            runs-on: macos-latest        # Apple silicon
+          - platform: linux-amd64
+            runs-on: ubuntu-latest
+          - platform: linux-arm64
+            runs-on: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runs-on }}
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+          fetch-depth: 0             # flake inputs pointing at the tree refuse a shallow clone
+
+      # DeterminateSystems rather than cachix/install-nix-action: the latter
+      # trips over the macOS runner's pre-provisioned _nixbld users.
+      - uses: DeterminateSystems/nix-installer-action@v22
+        with:
+          extra-conf: |
+            experimental-features = nix-command flakes
+
+      - name: Build chorus_core
+        run: |
+          set -euo pipefail
+          ver=$(jq -r .version core/metadata.json)
+          out=$(cd core && nix build '.#lgx-portable' --print-out-paths --no-link)
+          mkdir -p dist
+          cp "$(find "$out" -maxdepth 2 -name '*.lgx' | head -n1)" "dist/chorus_core-${ver}-${{ matrix.platform }}.lgx"
+
+      - name: Build chorus (UI)
+        run: |
+          set -euo pipefail
+          ver=$(jq -r .version ui/metadata.json)
+          out=$(cd ui && nix build --override-input chorus_core path:../core '.#lgx-portable' --print-out-paths --no-link)
+          cp "$(find "$out" -maxdepth 2 -name '*.lgx' | head -n1)" "dist/chorus-${ver}-${{ matrix.platform }}.lgx"
+
+      - name: Attach to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ls -l dist
+          gh release upload "$TAG" dist/*.lgx --clobber
