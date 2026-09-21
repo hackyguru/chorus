@@ -58,7 +58,12 @@ cp -R "$TMP/ui/variants/$VARIANT/." "$DEST/"
 # The manifest points `icon` at assets/icon.png, which lives at the package
 # root rather than inside the variant — without this the sidebar falls back to
 # a two-letter text tile.
-[ -d "$TMP/ui/assets" ] && cp -R "$TMP/ui/assets" "$DEST/assets"
+# Replace rather than copy over: `cp -R src existing-dir` nests the new copy
+# at assets/assets and leaves the previous icon in place.
+if [ -d "$TMP/ui/assets" ]; then
+    rm -rf "$DEST/assets"
+    cp -R "$TMP/ui/assets" "$DEST/assets"
+fi
 cp "$TMP/ui/manifest.json" "$DEST/manifest.json"
 printf '%s' "$VARIANT" > "$DEST/variant"
 chmod -R u+w "$DEST"
