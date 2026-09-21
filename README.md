@@ -1,5 +1,5 @@
 <p align="center">
-	<img width="150" height="150" src="ui/icons/voice.png" alt="Chorus logo">
+	<img width="150" height="150" src="ui/icons/chorus.png" alt="Chorus logo">
 </p>
 
 <h1 align="center">Chorus</h1>
