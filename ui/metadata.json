@@ -1,7 +1,7 @@
 {
   "name": "chorus",
   "displayName": "Chorus",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "ui_qml",
   "category": "communication",
   "description": "Chorus — voice rooms with no server in between",

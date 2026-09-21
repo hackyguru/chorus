@@ -800,6 +800,51 @@ Rectangle {
         }
     }
 
+    // Three bouncing bars shown next to a speaker's name.
+    component SpeakingBars: Row {
+        id: sb
+        property bool active: false
+        spacing: 2
+        visible: opacity > 0
+        opacity: active ? 1 : 0
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 150
+            }
+        }
+        Repeater {
+            model: 3
+            Rectangle {
+                id: bar
+                width: 3
+                height: 6
+                radius: 1.5
+                anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+                color: Theme.palette.primary
+                SequentialAnimation on height {
+                    running: sb.active
+                    loops: Animation.Infinite
+                    PauseAnimation {
+                        duration: index * 120
+                    }
+                    NumberAnimation {
+                        to: 14
+                        duration: 220
+                        easing.type: Easing.OutQuad
+                    }
+                    NumberAnimation {
+                        to: 5
+                        duration: 260
+                        easing.type: Easing.InQuad
+                    }
+                    PauseAnimation {
+                        duration: (2 - index) * 120
+                    }
+                }
+            }
+        }
+    }
+
     // Signal-strength style quality indicator.
     component QualityBars: Row {
         id: qb
@@ -1176,7 +1221,21 @@ Rectangle {
                                 Layout.preferredWidth: 100
                                 Layout.preferredHeight: 100
                                 Layout.minimumHeight: 160
-                                readonly property bool talking: p.level > 0.08
+                                id: tile
+                                // Speaking, with a short hold so the highlight
+                                // doesn't flicker off between words.
+                                readonly property real lvl: p.level || 0
+                                property bool held: false
+                                readonly property bool talking: lvl > 0.08 || held
+                                onLvlChanged: if (lvl > 0.08) {
+                                    held = true;
+                                    talkHold.restart();
+                                }
+                                Timer {
+                                    id: talkHold
+                                    interval: 450
+                                    onTriggered: tile.held = false
+                                }
                                 radius: Theme.spacing.radiusLarge
                                 color: Theme.palette.backgroundTertiary
                                 border.width: talking ? 2 : 1
@@ -1184,6 +1243,38 @@ Rectangle {
                                 Behavior on border.color {
                                     ColorAnimation {
                                         duration: 150
+                                    }
+                                }
+
+                                // Coral glow around the whole tile while speaking.
+                                Repeater {
+                                    model: 3
+                                    Rectangle {
+                                        z: -1
+                                        anchors.fill: parent
+                                        anchors.margins: -(3 + index * 4)
+                                        radius: tile.radius + 3 + index * 4
+                                        color: "transparent"
+                                        border.width: 4
+                                        border.color: Theme.colors.getColor(Theme.palette.primary, 0.30 - index * 0.09)
+                                        opacity: tile.talking ? 1 : 0
+                                        Behavior on opacity {
+                                            NumberAnimation {
+                                                duration: 180
+                                            }
+                                        }
+                                    }
+                                }
+                                // Faint coral wash inside the tile.
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: tile.radius
+                                    color: Theme.colors.getColor(Theme.palette.primary, 0.07)
+                                    opacity: tile.talking ? 1 : 0
+                                    Behavior on opacity {
+                                        NumberAnimation {
+                                            duration: 180
+                                        }
                                     }
                                 }
 
@@ -1197,12 +1288,24 @@ Rectangle {
                                         level: p.level
                                         size: Math.max(56, Math.min(96, parent.parent.height * 0.36))
                                     }
-                                    LogosText {
+                                    RowLayout {
                                         Layout.alignment: Qt.AlignHCenter
-                                        text: p.name
-                                        color: Theme.palette.text
-                                        font.pixelSize: Theme.typography.primaryText
-                                        font.weight: Theme.typography.weightMedium
+                                        spacing: 6
+                                        SpeakingBars {
+                                            active: tile.talking
+                                            Layout.alignment: Qt.AlignVCenter
+                                        }
+                                        LogosText {
+                                            text: p.name
+                                            color: tile.talking ? Theme.palette.primary : Theme.palette.text
+                                            font.pixelSize: Theme.typography.primaryText
+                                            font.weight: Theme.typography.weightMedium
+                                            Behavior on color {
+                                                ColorAnimation {
+                                                    duration: 150
+                                                }
+                                            }
+                                        }
                                     }
                                 }
 
